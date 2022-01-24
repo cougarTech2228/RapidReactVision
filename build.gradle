@@ -1,0 +1,90 @@
+plugins {
+    id 'java'
+    id 'application'
+    id 'com.github.johnrengelman.shadow' version '4.0.3' apply false
+    id 'org.hidetake.ssh' version '2.10.1'
+}
+
+mainClassName = 'Main'
+
+apply plugin: 'com.github.johnrengelman.shadow'
+apply plugin: 'java'
+
+repositories {
+    mavenCentral()
+    flatDir {
+        dirs '/usr/local/frc/java', '.'
+    }
+}
+
+remotes {
+  wpilibpi {
+    host = '10.22.28.5'
+    user = 'pi'
+    password = 'raspberry'
+    knownHosts = allowAnyHosts
+  }
+}
+
+archivesBaseName = "cougarTech"
+
+task deploy {
+  dependsOn build
+  doLast {
+    ssh.run {
+      session(remotes.wpilibpi) {
+        println "Making Filesystem Writable..."
+        execute "sudo mount -o remount,rw /"
+
+        try {
+          execute ('ls /home/pi/opencv-4.5.1 > /dev/null')
+        } catch (BadExitException) {
+          // opencv-4.5.1 doesn't exist, copy it over and extract it out
+          println "Copying OpenCV"
+          put from: files('opencv-4.5.1.tgz'), into: '/home/pi/'
+          execute 'tar xzf opencv-4.5.1.tgz'
+          execute 'rm opencv-4.5.1.tgz'
+        }
+
+        // try {
+        //   execute('ls galactic_search.pb > /dev/null')
+        // } catch (BadExitException) {
+        //   // neural net doesn't exist, copy it over
+        //   println "Copying Neural Network"
+        //   put from: files('neuralNetwork/models/galactic_search.pb'), into: '/home/pi/'
+        // }
+        // println "Copying Neural Network"
+        // put from: files('neuralNetwork/models/galactic_search.pb'), into: '/home/pi/'
+
+        println "Copying application..."
+        put from: files('runCamera', "$buildDir/libs/cougarTech-all.jar"), into: '/home/pi/'
+        execute 'chmod 755 /home/pi/runCamera'
+
+        println "Making Filesystem Read-Only..."
+        execute "sudo mount -o remount,rw /"
+
+        println "Restarting Service..."
+        execute 'sudo svc -d /service/camera'
+        execute 'sudo svc -u /service/camera'
+
+        println "Done!"
+      }
+    }
+  }
+}
+
+dependencies {
+    compile 'com.google.code.gson:gson:2.8.5'
+
+    compile name: 'wpiutil'
+    compile name: 'ntcore'
+    compile name: 'cscore'
+    compile name: 'cameraserver'
+    compile name: 'opencv-451'
+    compile name: 'wpilibj'
+    compile name: 'wpiHal'
+}
+
+wrapper {
+    gradleVersion = '5.0'
+}

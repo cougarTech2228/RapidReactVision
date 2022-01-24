@@ -1,0 +1,6 @@
+#!/bin/sh
+echo "Waiting 5 seconds..."
+sleep 5
+
+# configure the LD_LIBRARY_PATH to load our custom openCV 4.5.1 libs as well as the standard FRC libs
+exec env LD_LIBRARY_PATH=/home/pi/opencv-4.5.1/usr/local/lib:/home/pi/opencv-4.5.1/usr/local/share/java/opencv4:/usr/local/frc/lib java -jar cougarTech-all.jar
