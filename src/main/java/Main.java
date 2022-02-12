@@ -10,6 +10,8 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import com.google.gson.Gson;
@@ -168,8 +170,6 @@ public final class Main {
   public static List<Rect> targets = new ArrayList<>();
   public static List<RotatedRect> targetRects = new ArrayList<>();
 
-  // private static GalacticSearchNeuralNetwork galacticSearchNN = new GalacticSearchNeuralNetwork();
-
   static List<VideoCamera> cameras = new ArrayList<>();
 
   private Main() {
@@ -305,23 +305,6 @@ public final class Main {
     return camera;
   }
 
-  // **************************************************************************
-  // *
-  // * Main Method
-  // *
-  // **************************************************************************
-  // public static NetworkTableEntry xEntryPT;
-  // public static NetworkTableEntry yEntryPT;
-  // public static NetworkTableEntry widthEntry;
-  // public static NetworkTableEntry heightEntry;
-  // public static NetworkTableEntry difference;
-  // public static NetworkTableEntry xOffset;
-  // public static NetworkTableEntry gsX;
-  // public static NetworkTableEntry gsY;
-  // public static NetworkTableEntry gsSize;
-  // public static NetworkTableEntry path;
-  // public static NetworkTableEntry neuralNetwork;
-  // public static NetworkTableEntry neuralNetworkConf;
   public static NetworkTableEntry hubTopLeftX;
   public static NetworkTableEntry hubTopLeftY;
   public static NetworkTableEntry hubBottomRightX;
@@ -331,16 +314,17 @@ public final class Main {
   public static NetworkTableEntry shapesMaxX;
   public static NetworkTableEntry shapesMaxY;
   public static NetworkTableEntry shapesAreas;
+  public static NetworkTableEntry boundsX;
+  public static NetworkTableEntry boundsY;
+  public static NetworkTableEntry center;
+  public static NetworkTableEntry distanceFt;
+  public static NetworkTableEntry quadraticABC;
+  public static NetworkTableEntry width;
+  public static NetworkTableEntry deviationFromCenter;
+  public static NetworkTableEntry activeCamera;
 
   public static VideoSource frontCamera;
-  public static CvSource outputStream;
-  // public static Scalar greenColor;
-  // public static Scalar redColor;
-  // public static Scalar blueColor;
-  // public static Scalar blackColor;
-  // public static Scalar purpleColor;
-
-  
+  public static CvSource outputStream;  
 
   public static void main(String... args) {
     if (args.length > 0) {
@@ -384,20 +368,16 @@ public final class Main {
     shapesMaxY = table.getEntry("shapesMaxY");
     shapesAreas = table.getEntry("shapesAreas");
 
-    // xEntryPT = table.getEntry("X");
-    // yEntryPT = table.getEntry("Y");
-    // widthEntry = table.getEntry("width");
-    // heightEntry = table.getEntry("height");
-    // difference = table.getEntry("difference");
+    boundsX = table.getEntry("totalWidth");
+    boundsY = table.getEntry("totalHeight");
+    center = table.getEntry("center");
+    distanceFt = table.getEntry("distanceFeet");
+    quadraticABC = table.getEntry("quadraticABC");
+    width = table.getEntry("width");
+    deviationFromCenter = table.getEntry("deviationFromCenter");
+    activeCamera = table.getEntry("currentCamera");
+  
 
-    // NetworkTable gsTable = ntinst.getTable("GalacticSearch");
-
-    // gsX = gsTable.getEntry("x");
-    // gsY = gsTable.getEntry("y");
-    // gsSize = gsTable.getEntry("size");
-    // path = gsTable.getEntry("path");
-    // neuralNetwork = gsTable.getEntry("Neural");
-    // neuralNetworkConf = gsTable.getEntry("NeuralConf");
 
     CvSink cvSink = new CvSink("openCV Camera");
 
@@ -424,13 +404,6 @@ public final class Main {
       MjpegServer mjpegServer2 = new MjpegServer("serve_openCV", MJPEG_OPENCV_SERVER_PORT);
       mjpegServer2.setSource(outputStream);
 
-      // Just some color constants for later use in drawing contour overlays and text
-      // greenColor = new Scalar(0.0, 255.0, 0.0);
-      // redColor = new Scalar(0.0, 0.0, 255.0);
-      // blueColor = new Scalar(255.0, 0.0, 0.0);
-      // blackColor = new Scalar(0.0, 0.0, 0.0);
-      // purpleColor = new Scalar(255.0, 0.0, 255.0);
-
     } else {
       System.out.println("No cameras found");
     }
@@ -444,179 +417,30 @@ public final class Main {
     String visionMode = "Hub";
     for (;;) {
 
-      // NetworkTable visionModeTable = ntinst.getTable("Vision Mode");
-      // NetworkTableEntry selected;
-      // selected = visionModeTable.getEntry("selected");
-      // // Start the thread's execution. Runs continuously until the program is
-      // // terminated
-
-      // visionMode = selected.getString("");
-      // // System.out.println("Waiting for Shuffleboard choice... Mode: " + visionMode);
-
       try {
         Thread.sleep(300);
       } catch (InterruptedException ex) {
         return;
       }
 
-      // // System.out.println("Mode: " + visionMode);
       if (!visionMode.equals(previousSelected)) {
-      //   // this is the first time getting a mode
-      //   if (previousSelected == null) {
-      //     if (visionMode.equals("Galactic Search")) {
-      //       setCameraExposure(GS_CAMERA_EXPOSURE);
-      //       currentVisionThread = makeGalacticSearch();
-      //       currentVisionThread.start();
-      //       System.out.println("Starting Galactic Search");
-      //     } else if (visionMode.equals("Power Tower")) {
+
             setCameraExposure(PT_CAMERA_EXPOSURE);
             currentVisionThread = makePowerTower();
             currentVisionThread.start();
             System.out.println("Starting Power Tower");
-      //     } else {
-      //       visionMode = "other path we don't want";
-      //       currentVisionThread = null;
-      //     }
-      //   }
-      //   // the mode has been changed, must destroy old thread
-      //   else {
-      //     try {
-      //       currentVisionThread.stop();
-      //       System.out.println("Stopping path");
-      //       currentVisionThread.join();
-      //       System.out.println("Path Stopped");
-      //       currentVisionThread = null;
-      //     } catch (Exception e) {}
-      //     if (visionMode.equals("Galactic Search")) {
-      //       setCameraExposure(GS_CAMERA_EXPOSURE);
-      //       currentVisionThread = makeGalacticSearch();
-      //       currentVisionThread.start();
-      //       System.out.println("Started Galactic Search");
-      //     } else if (visionMode.equals("Power Tower")) {
-      //       setCameraExposure(PT_CAMERA_EXPOSURE);
-      //       currentVisionThread = makePowerTower();
-      //       currentVisionThread.start();
-      //       System.out.println("Started Power Tower");
-      //     } else {
-      //       visionMode = "other path we don't want";
 
-      //       currentVisionThread = null;
-      //       System.out.println("Not a valid path");
-      //     }
-      //   }
         previousSelected = visionMode;
       }
     }
   }
 
-  // private static VisionThread makeGalacticSearch() {
-  //   return new VisionThread(frontCamera, new GalacticSearch(), pipeline -> {
-  //     MatOfKeyPoint blobs = pipeline.findBlobsOutput();
-  //     List<KeyPoint> keyPoints = blobs.toList();
-  //     int num = keyPoints.size();
-  //     // List<Number> xArray = new ArrayList<>();
-  //     // List<Number> yArray = new ArrayList<>();
-  //     // List<Number> sizeArray = new ArrayList<>();
-
-  //     // System.out.println(num);
-  //     Number xArray[] = new Number[num];
-  //     Number yArray[] = new Number[num];
-  //     Number sizeArray[] = new Number[num];
-
-  //     String pathFind = "noPath";
-  //     int minSize = 9999;
-  //     int maxSize = 0;
-  //     int maxGSX = 0;
-  //     int minGSX = 9999;
-  //     int left = 0;
-  //     int middle = 0;
-  //     int right = 0;
-  //     int i = 0;
-  //     for (KeyPoint point : keyPoints) {
-  //       // xArray.add(point.pt.x);
-  //       xArray[i] = point.pt.x;
-  //       yArray[i] = point.pt.y;
-  //       sizeArray[i] = point.size;
-
-  //       if (point.size < minSize) {
-  //         minSize = (int) point.size;
-  //       }
-  //       if (point.size > maxSize) {
-  //         maxSize = (int) point.size;
-  //       }
-  //       if (point.pt.x < minGSX) {
-  //         left = i;
-  //         minGSX = (int) point.pt.x;
-  //       }
-  //       if (point.pt.x > maxGSX) {
-  //         right = i;
-  //         maxGSX = (int) point.pt.x;
-  //       }
-  //       i++;
-  //     }
-
-  //     if (num == 3) {
-  //       if (left == 0 && right == 2) {
-  //         middle = 1;
-  //       } else if (left == 2 && right == 0) {
-  //         middle = 1;
-  //       } else if (left == 0 && right == 1) {
-  //         middle = 2;
-  //       } else if (left == 1 && right == 0) {
-  //         middle = 2;
-  //       } else if (left == 1 && right == 2) {
-  //         middle = 0;
-  //       } else if (left == 2 && right == 1) {
-  //         middle = 0;
-  //       }
-  //       if (maxSize - minSize >= (15 + GS_SIZE_OFFSET)) { // Red path
-
-  //         if (xArray[middle].intValue() - xArray[left].intValue() > (120 + GS_X_OFFSET)) { // A path
-  //           // System.out.println("A red path: " + (xArray[middle].intValue() -
-  //           // xArray[left].intValue()) + " " + (maxSize - minSize));
-  //           pathFind = "aRed";
-  //         } else { // B path
-  //           // System.out.println("B red path: " + (xArray[middle].intValue() -
-  //           // xArray[left].intValue()) + " " + (maxSize - minSize));
-  //           pathFind = "bRed";
-  //         }
-
-  //       } else { // Blue path
-
-  //         if (xArray[right].intValue() - xArray[middle].intValue() > (120 + GS_X_OFFSET)) { // A path
-  //           // System.out.println("A blue path: " + (xArray[middle].intValue() -
-  //           // xArray[left].intValue()) + " " + (maxSize - minSize));
-  //           pathFind = "aBlue";
-  //         } else { // B path
-  //           // System.out.println("B blue path: " + (xArray[middle].intValue() -
-  //           // xArray[left].intValue()) + " " + (maxSize - minSize));
-  //           pathFind = "bBlue";
-  //         }
-
-  //       }
-  //     } else {
-  //       // System.out.println("sees " + num + " balls");
-  //     }
-  //     gsX.setNumberArray(xArray);
-  //     gsY.setNumberArray(yArray);
-  //     gsSize.setNumberArray(sizeArray);
-  //     System.out.println("Setting path: " + pathFind);
-  //     path.setString(pathFind);
-
-  //     Mat openCVOverlay = pipeline.cvFlipOutput();
-  //     GalacticSearchNeuralNetwork.Prediction prediction = galacticSearchNN.predictLabel(openCVOverlay);
-
-  //     outputStream.putFrame(openCVOverlay);
-  //     neuralNetwork.setString(prediction.label);
-  //     neuralNetworkConf.setDouble(prediction.conf);
-  //   });
-  // }
-
+  static ArrayList<Double> distances = new ArrayList<Double>();
   private static VisionThread makePowerTower() {
     return new VisionThread(frontCamera, new GripPipeline(), pipeline -> {
       // This grabs a snapshot of the live image currently being streamed
       // cvSink.grabFrame(openCVOverlay);
-      ArrayList<MatOfPoint> findContoursOutput = pipeline.findContoursOutput();
+      ArrayList<MatOfPoint> filterContoursOutput = pipeline.filterContoursOutput();
 
       double minx = 99999;
       double miny = 99999;
@@ -624,17 +448,18 @@ public final class Main {
       double maxy = 0;
       // double width;
       // double height;
-      double[] minX = new double[findContoursOutput.size()];
-      double[] minY = new double[findContoursOutput.size()];
-      double[] maxX = new double[findContoursOutput.size()];
-      double[] maxY = new double[findContoursOutput.size()];
-      double[] areas = new double[findContoursOutput.size()];
+      double[] minX = new double[filterContoursOutput.size()];
+      double[] minY = new double[filterContoursOutput.size()];
+      double[] maxX = new double[filterContoursOutput.size()];
+      double[] maxY = new double[filterContoursOutput.size()];
+      double[] areas = new double[filterContoursOutput.size()];
+      double[] centerX = new double[filterContoursOutput.size()];
+      double[] centerY = new double[filterContoursOutput.size()];
       int count = 0;
       
       
-      for (MatOfPoint points : findContoursOutput) {
+      for (MatOfPoint points : filterContoursOutput) {
         areas[count] = Imgproc.contourArea(points);
-
         double current_min_x = minx;
         double current_min_y = miny;
         double current_max_x = maxx;
@@ -645,10 +470,7 @@ public final class Main {
         double shape_max_y = 0;
         boolean isValid = true;
         for(Point point : points.toArray()) {
-          //if (point.y < 10) {
-            //isValid = false;
-            //break;
-          //}
+
           if (point.x < minx) {
             minx = point.x;
           }
@@ -679,30 +501,94 @@ public final class Main {
         minY[count] = shape_min_y;
         maxX[count] = shape_max_x;
         maxY[count] = shape_max_y;
+        centerX[count] = shape_max_x - shape_min_x;
+        centerY[count] = shape_max_y - shape_min_y;
         count++;
-        // if (isValid == false) {
-        //   minx = current_min_x;
-        //   maxx = current_max_x;
-        //   miny = current_min_y;
-        //   maxy = current_max_y;
-        // }
 
       }
+      
       // width = maxx - minx;
       // height = maxy - miny;
 
       // System.out.println("X: " + minx);
+      double yAve = 0;
+      double xAve = 0;
+      for(int i = 0; i < centerX.length; i++){
+        xAve += centerX[i];
+        yAve += centerY[i];
+      }
+      xAve /= centerX.length;
+      yAve /= centerY.length;
+      double dist = -1.2033 * yAve + 23.176;
+      if(distances.size() < 10){
+        distances.add(dist);
+      }
+      else{
+        distances.remove(0);
+        distances.add(dist);
+      }
+      dist = 0;
+      for(double distance : distances){
+        dist += distance;
+      }
+      dist /= distances.size();
 
       shapesMinX.setDoubleArray(minX);
       shapesMinY.setDoubleArray(minY);
       shapesMaxX.setDoubleArray(maxX);
       shapesMaxY.setDoubleArray(maxY);
       shapesAreas.setDoubleArray(areas);
+      boundsX.setDouble(xAve);
+      boundsY.setDouble(yAve);
+      
+      width.setDouble(dist);
+
       hubTopLeftX.setNumber(minx);
       hubTopLeftY.setNumber(miny);
       hubBottomRightX.setNumber(maxx);
-      hubBottomRightY.setNumber(maxy);
-      
+      hubBottomRightY.setNumber(maxy);      
+      deviationFromCenter.setNumber(xAve - IMAGE_WIDTH_PIXELS / 2);
+
+      //boundsX.setNumber(maxx - minx); 
+      //boundsY.setNumber(maxy - miny);
+      //center.setNumber(minx + (maxx - minx) / 2);
+      //double width = maxx - minx;
+      //distanceFt.setDouble(-.1757 * width + 34.209);
+      //distanceFt.setDouble(width);
+      // double x1 = minX[0];
+      // double y1 = minY[0];
+      // double x2 = minX[1];
+      // double y2 = minY[1];
+      // double x3 = minX[2];
+      // double y3 = minY[2];
+
+      //double b = (y1 * (x1 * x1 - x3 * x3) - y2 * (x1 * x1 - x3 * x3) - y1 * (x1 * x1 - x2 * x2) - y3 * (x1 * x1 - x2 * x2))
+      /// ((x1 - x2) * (x1 * x1 - x3 * x3) - (x1 - x3) * (x1 * x1 - x2 * x2));
+      //double a = (y2 - y3 - b * (x2 - x3)) / (x2 * x2 - x3 * x3);
+      //double c = y2 - a * x2 * x2 - b * x2;
+      //double[] vals = {a, b, c};
+      //quadraticABC.setDoubleArray(vals);
+
+      // double a = x1 * x1;
+      // double b = x1;
+      // double c = 1;
+      // double d = y1;
+      // double e = x2 * x2;
+      // double f = x2;
+      // double g = 1;
+      // double h = y2;
+      // double i = x3 * x3;
+      // double j = x3;
+      // double k = 1;
+      // double l = y3;
+
+      // double delta = (a * f * k) + (b * g * i) + (c * e * j) - (c * f * i) - (a * g * j) - (b * e * k);
+      // double aNum = (d * f * k) + (b * g * l) + (c * h * j) - (c * f * l) - (d * g * j) - (b * h * k);
+      // double bNum = (a * h * k) + (d * g * i) + (c * e * l) - (c * h * i) - (a * g * l) - (d * e * k);
+      // double cNum = (a * f * l) + (b * h * i) + (d * e * j) - (d * f * i) - (a * h * j) - (b * e * l);
+
+      // double[] vals = {aNum / delta, bNum/delta, cNum/delta};
+      // quadraticABC.setDoubleArray(vals);
     });
   }
 
