@@ -349,9 +349,9 @@ public final class Main {
 
     // Start cameras
     for (CameraConfig cameraConfig : cameraConfigs) {
+      
       cameras.add(startCamera(cameraConfig));
     }
-
     // ShuffleboardTab tab = Shuffleboard.getTab("PowerTower");
     // xOffset = tab.add("PT Offset", 0).getEntry();
 
@@ -391,7 +391,12 @@ public final class Main {
       // an MJPEG Server.
       // TODO - this will always get the first camera detected and that may be the
       // back camera which is no bueno
-      frontCamera = cameras.get(0);
+      for(VideoSource camera : cameras){
+        if(camera.getName().equals("Shooter")){
+          frontCamera = camera;
+        }
+      }
+      //frontCamera = cameras.get(0);
 
       cvSink.setSource(frontCamera);
       outputStream = new CvSource("2228_OpenCV", PixelFormat.kMJPEG, (int) IMAGE_WIDTH_PIXELS,
