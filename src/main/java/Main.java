@@ -91,8 +91,8 @@ import vision.GripPipeline;
 // **************************************************************************
 public final class Main {
   public static final int MJPEG_OPENCV_SERVER_PORT = 1183;
-  public static final double IMAGE_WIDTH_PIXELS = 640.0;
-  public static final double IMAGE_HEIGHT_PIXELS = 480.0;
+  public static final double IMAGE_WIDTH_PIXELS = 320.0;
+  public static final double IMAGE_HEIGHT_PIXELS = 240.0;
   public static final int DEFAULT_FRAME_RATE = 30;
   public static final double HALF_IMAGE_WIDTH_IN_PIXELS = IMAGE_WIDTH_PIXELS / 2.0;
 
