@@ -21,6 +21,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
+import org.opencv.core.Core;
 import org.opencv.core.KeyPoint;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfKeyPoint;
@@ -46,7 +47,6 @@ import edu.wpi.first.vision.VisionThread;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import vision.GripPipeline;
-
 
 
 /*
@@ -326,6 +326,9 @@ public final class Main {
   public static VideoSource frontCamera;
   public static CvSource outputStream;  
 
+  public static Scalar greenColor;
+  public static Scalar redColor;
+
   public static void main(String... args) {
     if (args.length > 0) {
       configFile = args[0];
@@ -354,6 +357,9 @@ public final class Main {
     }
     // ShuffleboardTab tab = Shuffleboard.getTab("PowerTower");
     // xOffset = tab.add("PT Offset", 0).getEntry();
+
+    greenColor = new Scalar(0.0, 255.0, 0.0);
+    redColor = new Scalar(0.0, 0.0, 255.0);
 
     NetworkTable table = ntinst.getTable("Hub");
 
@@ -444,7 +450,27 @@ public final class Main {
   private static VisionThread makePowerTower() {
     return new VisionThread(frontCamera, new GripPipeline(), pipeline -> {
       // This grabs a snapshot of the live image currently being streamed
-      // cvSink.grabFrame(openCVOverlay);
+      //cvSink.grabFrame(openCVOverlay);
+      Mat openCVOverlay = pipeline.cvFlipOutput();
+      
+      double xOff = deviationFromCenter.getDouble(0.0);
+
+      Core.rotate(openCVOverlay, openCVOverlay, Core.ROTATE_90_CLOCKWISE);
+
+      Imgproc.line(openCVOverlay, new Point((IMAGE_WIDTH_PIXELS / 2), IMAGE_HEIGHT_PIXELS),
+          new Point((IMAGE_WIDTH_PIXELS / 2), 0), greenColor, 3, 4);
+      double greenX = (IMAGE_HEIGHT_PIXELS / 2);
+      
+      Imgproc.line(openCVOverlay, new Point((xOff + IMAGE_WIDTH_PIXELS / 2), IMAGE_HEIGHT_PIXELS),
+      new Point((xOff + IMAGE_WIDTH_PIXELS / 2), 0), redColor, 3, 4);
+  //double greenX = (IMAGE_HEIGHT_PIXELS / 2);
+
+      // Imgproc.line(openCVOverlay, new Point((IMAGE_HEIGHT_PIXELS / 2) + xOff, 25),
+      //     new Point((IMAGE_HEIGHT_PIXELS / 2) + xOff, IMAGE_WIDTH_PIXELS - 10), greenColor, 3, 4);
+      // double greenX = (IMAGE_HEIGHT_PIXELS / 2) + xOff;
+
+      outputStream.putFrame(openCVOverlay);
+
       ArrayList<MatOfPoint> filterContoursOutput = pipeline.filterContoursOutput();
 
       double minx = 99999;
@@ -506,8 +532,8 @@ public final class Main {
         minY[count] = shape_min_y;
         maxX[count] = shape_max_x;
         maxY[count] = shape_max_y;
-        centerX[count] = shape_max_x - shape_min_x;
-        centerY[count] = shape_max_y - shape_min_y;
+        centerX[count] = shape_min_x + (shape_max_x - shape_min_x) / 2;
+        centerY[count] = shape_min_y + (shape_max_y - shape_min_y) / 2;
         count++;
 
       }

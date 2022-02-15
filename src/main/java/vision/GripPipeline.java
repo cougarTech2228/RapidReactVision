@@ -17,6 +17,8 @@ import org.opencv.imgproc.*;
 public class GripPipeline implements VisionPipeline {
 
 	//Outputs
+	private Mat cvTransposeOutput = new Mat();
+	private Mat cvFlipOutput = new Mat();
 	private Mat hslThresholdOutput = new Mat();
 	private ArrayList<MatOfPoint> findContoursOutput = new ArrayList<MatOfPoint>();
 	private ArrayList<MatOfPoint> filterContoursOutput = new ArrayList<MatOfPoint>();
@@ -29,6 +31,14 @@ public class GripPipeline implements VisionPipeline {
 	 * This is the primary method that runs the entire pipeline and updates the outputs.
 	 */
 	public void process(Mat source0) {
+		// Step CV_transpose0:
+		Mat cvTransposeSrc1 = source0;
+		cvTranspose(cvTransposeSrc1, cvTransposeOutput);
+
+		// Step CV_flip0:
+		Mat cvFlipSrc = cvTransposeOutput;
+		FlipCode cvFlipFlipcode = FlipCode.X_AXIS;
+		cvFlip(cvFlipSrc, cvFlipFlipcode, cvFlipOutput);
 		// Step HSL_Threshold0:
 		Mat hslThresholdInput = source0;
 		double[] hslThresholdHue = {44, 91};
@@ -43,7 +53,7 @@ public class GripPipeline implements VisionPipeline {
 
 		// Step Filter_Contours0:
 		ArrayList<MatOfPoint> filterContoursContours = findContoursOutput;
-		double filterContoursMinArea = 0;
+		double filterContoursMinArea = 3;
 		double filterContoursMinPerimeter = 0;
 		double filterContoursMinWidth = 0.0;
 		double filterContoursMaxWidth = 1000;
@@ -119,6 +129,54 @@ public class GripPipeline implements VisionPipeline {
 		}
 		int method = Imgproc.CHAIN_APPROX_SIMPLE;
 		Imgproc.findContours(input, contours, hierarchy, mode, method);
+	}
+
+		/**
+	 * Code used for CV_flip. 
+	 * Per OpenCV spec 0 -> flip on X axis.
+	 * >0 -> flip on Y axis.
+	 * <0 -> flip on both axes.
+	 */
+	public enum FlipCode {
+		X_AXIS(0),
+		Y_AXIS(1),
+		BOTH_AXES(-1);
+		public final int value;
+		FlipCode(int value) {
+			this.value = value;
+		}
+	}	
+		/**
+	 * Flips an image along X, Y or both axes.
+	 * @param src Image to flip.
+	 * @param flipcode FlipCode of which direction to flip.
+	 * @param dst flipped version of the Image.
+	 */
+	private void cvFlip(Mat src, FlipCode flipcode, Mat dst) {
+		Core.flip(src, dst, flipcode.value);
+	}
+	/**
+	 * Computes the transpose of a Mat.
+	 * @param src the source Mat.
+	 * @param dst the transpose of src.
+	 */
+	private void cvTranspose(Mat src, Mat dst) {
+		Core.transpose(src, dst);
+	}
+		/**
+	 * This method is a generated getter for the output of a CV_transpose.
+	 * @return Mat output from CV_transpose.
+	 */
+	public Mat cvTransposeOutput() {
+		return cvTransposeOutput;
+	}
+
+	/**
+	 * This method is a generated getter for the output of a CV_flip.
+	 * @return Mat output from CV_flip.
+	 */
+	public Mat cvFlipOutput() {
+		return cvFlipOutput;
 	}
 
 
