@@ -322,9 +322,19 @@ public final class Main {
   public static NetworkTableEntry width;
   public static NetworkTableEntry deviationFromCenter;
   public static NetworkTableEntry activeCamera;
+  public static NetworkTableEntry hslThresholdHueNT;
+  public static NetworkTableEntry hslThresholdSaturationNT;
+  public static NetworkTableEntry hslThresholdLuminanceNT;
+  public static NetworkTableEntry shooterCameraExposureNT;
 
-  public static VideoSource frontCamera;
-  public static CvSource outputStream;  
+  public static VideoSource shooterCamera;
+  public static CvSource outputStream;
+
+  private static double[] hslThresholdHue = {44, 91};
+	private	static double[] hslThresholdSaturation = {204, 255.0};
+	private	static double[] hslThresholdLuminance = {28, 193};
+
+  private static int shooterCameraExposure;
 
   public static void main(String... args) {
     if (args.length > 0) {
@@ -347,13 +357,34 @@ public final class Main {
       ntinst.startClientTeam(team);
     }
 
-    // Start cameras
-    for (CameraConfig cameraConfig : cameraConfigs) {
-      
-      cameras.add(startCamera(cameraConfig));
-    }
+    
     // ShuffleboardTab tab = Shuffleboard.getTab("PowerTower");
     // xOffset = tab.add("PT Offset", 0).getEntry();
+
+    NetworkTable hubsettingstable =  ntinst.getTable("Hub Settings");
+
+    hslThresholdHueNT = hubsettingstable.getEntry("Hue");
+    hslThresholdSaturationNT = hubsettingstable.getEntry("Saturation");
+    hslThresholdLuminanceNT = hubsettingstable.getEntry("Luminance");
+
+    if(hslThresholdHue.length == 0){
+      hslThresholdHue = new double[] {44, 91};
+      System.out.println("hue default");
+    }
+    if(hslThresholdSaturation.length == 0){
+      hslThresholdSaturation = new double[] {204, 255.0};
+      System.out.println("Saturation default");
+    }
+    if(hslThresholdLuminance.length == 0){
+      hslThresholdLuminance = new double[] {28, 193};
+      System.out.println("Luminance default");
+    }
+    
+
+
+    hslThresholdHueNT.getDoubleArray(hslThresholdHue);
+    hslThresholdSaturationNT.getDoubleArray(hslThresholdSaturation);
+    hslThresholdLuminanceNT.getDoubleArray(hslThresholdLuminance);
 
     NetworkTable table = ntinst.getTable("Hub");
 
@@ -376,8 +407,14 @@ public final class Main {
     width = table.getEntry("width");
     deviationFromCenter = table.getEntry("deviationFromCenter");
     activeCamera = table.getEntry("currentCamera");
-  
+    shooterCameraExposureNT = hubsettingstable.getEntry("shooterCamerExposure");
 
+    shooterCameraExposure = shooterCameraExposureNT.getNumber(100).intValue();
+  
+    // Start cameras
+    for (CameraConfig cameraConfig : cameraConfigs) {      
+      cameras.add(startCamera(cameraConfig));
+    }
 
     CvSink cvSink = new CvSink("openCV Camera");
 
@@ -391,14 +428,15 @@ public final class Main {
       // an MJPEG Server.
       // TODO - this will always get the first camera detected and that may be the
       // back camera which is no bueno
-      for(VideoSource camera : cameras){
+      for(VideoCamera camera : cameras){
         if(camera.getName().equals("Shooter")){
-          frontCamera = camera;
+          shooterCamera = camera;
+          camera.setExposureManual(shooterCameraExposure);
         }
       }
-      //frontCamera = cameras.get(0);
+      //shooterCamera = cameras.get(0);
 
-      cvSink.setSource(frontCamera);
+      cvSink.setSource(shooterCamera);
       outputStream = new CvSource("2228_OpenCV", PixelFormat.kMJPEG, (int) IMAGE_WIDTH_PIXELS,
           (int) IMAGE_HEIGHT_PIXELS, DEFAULT_FRAME_RATE);
 
@@ -430,7 +468,7 @@ public final class Main {
 
       if (!visionMode.equals(previousSelected)) {
 
-            setCameraExposure(PT_CAMERA_EXPOSURE);
+            //setCameraExposure(PT_CAMERA_EXPOSURE);
             currentVisionThread = makePowerTower();
             currentVisionThread.start();
             System.out.println("Starting Power Tower");
@@ -442,7 +480,7 @@ public final class Main {
 
   static ArrayList<Double> distances = new ArrayList<Double>();
   private static VisionThread makePowerTower() {
-    return new VisionThread(frontCamera, new GripPipeline(), pipeline -> {
+    return new VisionThread(shooterCamera, new GripPipeline(hslThresholdHue, hslThresholdSaturation, hslThresholdLuminance), pipeline -> {
       // This grabs a snapshot of the live image currently being streamed
       // cvSink.grabFrame(openCVOverlay);
       ArrayList<MatOfPoint> filterContoursOutput = pipeline.filterContoursOutput();
@@ -468,7 +506,7 @@ public final class Main {
         double current_min_x = minx;
         double current_min_y = miny;
         double current_max_x = maxx;
-        double current_max_y = maxy;
+        double current_max_y = maxy; 
         double shape_min_x = 99999;
         double shape_min_y = 99999;
         double shape_max_x = 0;
@@ -598,15 +636,15 @@ public final class Main {
   }
 
 
-  public static void setCameraExposure(int value){
-    for(VideoCamera camera : cameras){
-      if (value >= 0){
-        camera.setExposureManual(value);
-      }
-      else{
-        camera.setExposureAuto();
-      }
-    }
-  }
+  // public static void setCameraExposure(int value){
+  //   for(VideoCamera camera : cameras){
+  //     if (value >= 0){
+  //       camera.setExposureManual(value);
+  //     }
+  //     else{
+  //       camera.setExposureAuto();
+  //     }
+  //   }
+  // }
 }
 
