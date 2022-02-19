@@ -22,9 +22,18 @@ public class GripPipeline implements VisionPipeline {
 	private Mat hslThresholdOutput = new Mat();
 	private ArrayList<MatOfPoint> findContoursOutput = new ArrayList<MatOfPoint>();
 	private ArrayList<MatOfPoint> filterContoursOutput = new ArrayList<MatOfPoint>();
+	private double[] hslThresholdHue;
+	private	double[] hslThresholdSaturation;
+	private	double[] hslThresholdLuminance;
 
 	static {
 		System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
+	}
+
+	public GripPipeline(double[] hslThresholdHue, double[] hslThresholdSaturation, double[] hslThresholdLuminance){
+		this.hslThresholdHue = hslThresholdHue;
+		this.hslThresholdLuminance = hslThresholdLuminance;
+		this.hslThresholdSaturation = hslThresholdSaturation;
 	}
 
 	/**
@@ -41,9 +50,6 @@ public class GripPipeline implements VisionPipeline {
 		cvFlip(cvFlipSrc, cvFlipFlipcode, cvFlipOutput);
 		// Step HSL_Threshold0:
 		Mat hslThresholdInput = source0;
-		double[] hslThresholdHue = {44, 91};
-		double[] hslThresholdSaturation = {204, 255.0};
-		double[] hslThresholdLuminance = {28, 193};
 		hslThreshold(hslThresholdInput, hslThresholdHue, hslThresholdSaturation, hslThresholdLuminance, hslThresholdOutput);
 
 		// Step Find_Contours0:
