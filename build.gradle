@@ -19,7 +19,7 @@ repositories {
 
 remotes {
   wpilibpi {
-    host = '10.22.28.5'
+    host = '10.22.28.10'
     user = 'pi'
     password = 'raspberry'
     knownHosts = allowAnyHosts
