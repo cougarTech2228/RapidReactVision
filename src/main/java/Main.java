@@ -105,13 +105,12 @@ public final class Main {
   static VideoCamera shooterCamera = null;
   static int shooterCameraExposure;
 
-  public static CvSource cvOutputStream;
-
   private static double[] hslThresholdHue = {44, 91};
 	private	static double[] hslThresholdSaturation = {204, 255.0};
 	private	static double[] hslThresholdLuminance = {28, 193};
   private static boolean ntReady = false;
 
+  public static CvSource cvOutputStream;
   public static Scalar greenColor;
   public static Scalar redColor;
 
@@ -150,9 +149,7 @@ public final class Main {
 
     // stream properties
     cam.streamConfig = config.get("stream");
-
     cam.config = config;
-
     cameraConfigs.add(cam);
     return true;
   }
@@ -404,6 +401,8 @@ public final class Main {
                   mjpegServer.setSource(acquirerCamera);
                 } else if (activeCamera.equals("Target")) {
                   mjpegServer.setSource(cvOutputStream);
+                } else if (activeCamera.equals("Settings")){
+                  mjpegServer.setSource(shooterCamera);
                 }
               }
             }
@@ -435,7 +434,7 @@ public final class Main {
 
         mjpegServer.setSource(acquirerCamera);
         //setCameraExposure(PT_CAMERA_EXPOSURE);
-        currentVisionThread = makePowerTower();
+        currentVisionThread = makeVisionThread();
         currentVisionThread.start();
         System.out.println("Starting Vision Thread");
         previousSelected = visionMode;
@@ -444,7 +443,7 @@ public final class Main {
   }
 
   static ArrayList<Double> distances = new ArrayList<Double>();
-  private static VisionThread makePowerTower() {
+  private static VisionThread makeVisionThread() {
     return new VisionThread(shooterCamera, new GripPipeline(hslThresholdHue, hslThresholdSaturation, hslThresholdLuminance), pipeline -> {
       // This grabs a snapshot of the live image currently being streamed
       //cvSink.grabFrame(openCVOverlay);
