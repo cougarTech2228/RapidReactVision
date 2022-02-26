@@ -101,7 +101,7 @@ public final class Main {
   public static NetworkTableEntry shooterCameraExposureNT;
 
   static MjpegServer mjpegServer = null;
-  static VideoCamera acquirerCamera = null;
+  // static VideoCamera acquirerCamera = null;
   static VideoCamera shooterCamera = null;
   static int shooterCameraExposure;
 
@@ -262,9 +262,10 @@ public final class Main {
         if(camera.getName().equals("Shooter")){
           shooterCamera = camera;
           setShooterCameraExposure(shooterCameraExposure);
-        } else if (camera.getName().equals("Acquirer")) {
-          acquirerCamera = camera;
         }
+        // else if (camera.getName().equals("Acquirer")) {
+        //   acquirerCamera = camera;
+        // }
       }
 
       cvSink.setSource(shooterCamera);
@@ -391,22 +392,22 @@ public final class Main {
           hslThresholdSaturationNT.getDoubleArray(hslThresholdSaturation);
           hslThresholdLuminanceNT.getDoubleArray(hslThresholdLuminance);
 
-          activeCameraNT.addListener(new Consumer<EntryNotification>() {
-            @Override
-            public void accept(EntryNotification event) {
-              String activeCamera = activeCameraNT.getString("");
-              System.out.println("Active Camera Switched to " + activeCamera);
-              if (mjpegServer != null) {
-                if (activeCamera.equals("Ball")) {
-                  mjpegServer.setSource(acquirerCamera);
-                } else if (activeCamera.equals("Target")) {
-                  mjpegServer.setSource(cvOutputStream);
-                } else if (activeCamera.equals("Settings")){
-                  mjpegServer.setSource(shooterCamera);
-                }
-              }
-            }
-          }, 0xfff);
+          // activeCameraNT.addListener(new Consumer<EntryNotification>() {
+          //   @Override
+          //   public void accept(EntryNotification event) {
+          //     String activeCamera = activeCameraNT.getString("");
+          //     System.out.println("Active Camera Switched to " + activeCamera);
+          //     if (mjpegServer != null) {
+          //       if (activeCamera.equals("Ball")) {
+          //         mjpegServer.setSource(acquirerCamera);
+          //       } else if (activeCamera.equals("Target")) {
+          //         mjpegServer.setSource(cvOutputStream);
+          //       } else if (activeCamera.equals("Settings")){
+          //         mjpegServer.setSource(shooterCamera);
+          //       }
+          //     }
+          //   }
+          // }, 0xfff);
 
           ntReady = true;
         }
@@ -432,7 +433,7 @@ public final class Main {
       if (ntReady && !visionMode.equals(previousSelected)) {
         initCamera();
 
-        mjpegServer.setSource(acquirerCamera);
+        mjpegServer.setSource(cvOutputStream);
         //setCameraExposure(PT_CAMERA_EXPOSURE);
         currentVisionThread = makeVisionThread();
         currentVisionThread.start();
