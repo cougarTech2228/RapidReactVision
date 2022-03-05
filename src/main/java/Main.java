@@ -93,6 +93,7 @@ public final class Main {
   public static NetworkTableEntry distanceFt;
   public static NetworkTableEntry quadraticABC;
   public static NetworkTableEntry width;
+  public static NetworkTableEntry averageHeight;
   public static NetworkTableEntry deviationFromCenter;
   public static NetworkTableEntry activeCameraNT;
   public static NetworkTableEntry hslThresholdHueNT;
@@ -338,6 +339,7 @@ public final class Main {
     width = table.getEntry("width");
     deviationFromCenter = table.getEntry("deviationFromCenter");
     activeCameraNT = table.getEntry("currentCamera");
+    averageHeight = table.getEntry("averageHeight");
 
     ntinst.addConnectionListener(new Consumer<ConnectionNotification>() {
 
@@ -570,7 +572,7 @@ public final class Main {
       boundsY.setDouble(yAve);
       
       width.setDouble(dist);
-
+      averageHeight.setDouble(yAve);
       hubTopLeftX.setNumber(minx);
       hubTopLeftY.setNumber(miny);
       hubBottomRightX.setNumber(maxx);
