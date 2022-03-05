@@ -102,17 +102,16 @@ public final class Main {
   public static NetworkTableEntry shooterCameraExposureNT;
 
   static MjpegServer mjpegServer = null;
-  static VideoCamera acquirerCamera = null;
+  // static VideoCamera acquirerCamera = null;
   static VideoCamera shooterCamera = null;
   static int shooterCameraExposure;
-
-  public static CvSource cvOutputStream;
 
   private static double[] hslThresholdHue = {44, 91};
 	private	static double[] hslThresholdSaturation = {204, 255.0};
 	private	static double[] hslThresholdLuminance = {28, 193};
   private static boolean ntReady = false;
 
+  public static CvSource cvOutputStream;
   public static Scalar greenColor;
   public static Scalar redColor;
 
@@ -151,9 +150,7 @@ public final class Main {
 
     // stream properties
     cam.streamConfig = config.get("stream");
-
     cam.config = config;
-
     cameraConfigs.add(cam);
     return true;
   }
@@ -266,9 +263,10 @@ public final class Main {
         if(camera.getName().equals("Shooter")){
           shooterCamera = camera;
           setShooterCameraExposure(shooterCameraExposure);
-        } else if (camera.getName().equals("Acquirer")) {
-          acquirerCamera = camera;
         }
+        // else if (camera.getName().equals("Acquirer")) {
+        //   acquirerCamera = camera;
+        // }
       }
 
       cvSink.setSource(shooterCamera);
@@ -396,20 +394,22 @@ public final class Main {
           hslThresholdSaturationNT.getDoubleArray(hslThresholdSaturation);
           hslThresholdLuminanceNT.getDoubleArray(hslThresholdLuminance);
 
-          activeCameraNT.addListener(new Consumer<EntryNotification>() {
-            @Override
-            public void accept(EntryNotification event) {
-              String activeCamera = activeCameraNT.getString("");
-              System.out.println("Active Camera Switched to " + activeCamera);
-              if (mjpegServer != null) {
-                if (activeCamera.equals("Ball")) {
-                  mjpegServer.setSource(acquirerCamera);
-                } else if (activeCamera.equals("Target")) {
-                  mjpegServer.setSource(cvOutputStream);
-                }
-              }
-            }
-          }, 0xfff);
+          // activeCameraNT.addListener(new Consumer<EntryNotification>() {
+          //   @Override
+          //   public void accept(EntryNotification event) {
+          //     String activeCamera = activeCameraNT.getString("");
+          //     System.out.println("Active Camera Switched to " + activeCamera);
+          //     if (mjpegServer != null) {
+          //       if (activeCamera.equals("Ball")) {
+          //         mjpegServer.setSource(acquirerCamera);
+          //       } else if (activeCamera.equals("Target")) {
+          //         mjpegServer.setSource(cvOutputStream);
+          //       } else if (activeCamera.equals("Settings")){
+          //         mjpegServer.setSource(shooterCamera);
+          //       }
+          //     }
+          //   }
+          // }, 0xfff);
 
           ntReady = true;
         }
@@ -435,9 +435,9 @@ public final class Main {
       if (ntReady && !visionMode.equals(previousSelected)) {
         initCamera();
 
-        mjpegServer.setSource(acquirerCamera);
+        mjpegServer.setSource(cvOutputStream);
         //setCameraExposure(PT_CAMERA_EXPOSURE);
-        currentVisionThread = makePowerTower();
+        currentVisionThread = makeVisionThread();
         currentVisionThread.start();
         System.out.println("Starting Vision Thread");
         previousSelected = visionMode;
@@ -446,7 +446,7 @@ public final class Main {
   }
 
   static ArrayList<Double> distances = new ArrayList<Double>();
-  private static VisionThread makePowerTower() {
+  private static VisionThread makeVisionThread() {
     return new VisionThread(shooterCamera, new GripPipeline(hslThresholdHue, hslThresholdSaturation, hslThresholdLuminance), pipeline -> {
       // This grabs a snapshot of the live image currently being streamed
       //cvSink.grabFrame(openCVOverlay);
